@@ -1,4 +1,5 @@
 var moment		= require('moment');
+var db			= require(__dirname + '/db');
 var appConfig	= require(__dirname + '/../config');
 
 var getMailer = function ( config ) {
@@ -48,36 +49,42 @@ var getMailer = function ( config ) {
 };
 
 
-var createHtmlListFromItems = function ( items ) {
+var createHtmlListFromItems = function ( items, referenceItems = [] ) {
 
 	var html = '';
 
-	html += '<ul>' + "\n";
+	html += '<ul style="list-style-type:none;">' + "\n";
 
 	for ( var i in items ) {
 
 		var item = items[ i ];
+		if (referenceItems.length) {
+			var referenceItem = referenceItems[ i ]
+		}
 
 		html += '<li>' + "\n";
 
-			html += '<b>' + item.name + '</b>' + "\n";
-			html += '<ul>' + "\n";
+			html += '<a href="' + item.link + '"><h3>' + item.name + '</h3></a>' + "\n";
 
-				if ( item.image )
-					html += '<li><img src="' + item.image + '"></li>' + "\n";
+			if ( item.image )
+				html += '<img src="' + item.image + '" style="-webkit-filter: drop-shadow(0px 0px 2px #444); filter: drop-shadow(0px 0px 2px #444); border-radius: 1%;">' + "\n";
 
-				html += '<li>#' + item.id + '</li>' + "\n";
-				html += '<li><a href="' + item.link + '">' + item.link + '</a></li>' + "\n";
+			html += '<p><ul>' + "\n";
+			html += '<li>#' + item.id + '</li>' + "\n";
 
-				for ( var j in item ) {
+			for ( var j in item ) {
 
-					if ( j === 'name' || j === 'id' || j === 'link' || j === 'image' || !item[ j ] )
-						continue;
+				if ( j === 'name' || j === 'id' || j === 'link' || j === 'image' || !item[ j ] )
+					continue;
 
+				if (!referenceItem || item[ j ] === referenceItem[ j ] ) {
 					html += '<li>' + j + ': <b>' + item[ j ] + '</b></li>' + "\n";
+				} else {
+					html += '<li>' + j + ': <s>' + referenceItem[ j ] + '</s> <b>' + item[ j ] + ' ⭐️</b></li>' + "\n";
 				}
+			}
 
-			html += '</ul>' + "\n";
+			html += '</ul></p>' + "\n";
 
 		html += '</li>' + "\n";
 	}
@@ -90,7 +97,7 @@ var createHtmlListFromItems = function ( items ) {
 
 
 module.exports = {
-	sendMail: function ( config, url, email, tag, newItems, updatedItems, customHTML ) {
+	sendMail: function ( config, url, email, tag, newItems, updatedItems, referenceItems, customHTML ) {
 
 		if ( !email || ( !newItems.length && !updatedItems.length && !customHTML ) )
 			return;
@@ -101,7 +108,7 @@ module.exports = {
 
 			if ( newItems.length ) {
 
-				html += '<h1>NEW</h1>' + "\n";
+				html += '<h1>🆕 NEW</h1>' + "\n";
 				html += createHtmlListFromItems( newItems );
 			}
 
@@ -113,8 +120,8 @@ module.exports = {
 
 			if ( updatedItems.length ) {
 
-				html += '<h1>UPDATED</h1>' + "\n";
-				html += createHtmlListFromItems( updatedItems );
+				html += '<h1>⭐️ UPDATED</h1>' + "\n";
+				html += createHtmlListFromItems( updatedItems, referenceItems );
 			}
 
 			if ( customHTML )
@@ -138,6 +145,7 @@ module.exports = {
 			var mailer = getMailer( config );
 			mailer.sendMail(message, tag).then( function(result) {
 				console.log( '[' + moment().format('YYYY-MM-DD HH:mm:ss') + '] Mail success: ' + config.name + (tag ? (' - ' + tag) : '') + ' - ' + email );
+
 			}).catch( function( err ) {
 				console.error( '[' + moment().format('YYYY-MM-DD HH:mm:ss') + '] Mail error: ' + err.name + ' - ' + err.message );
 				db.rollback( config, email, newItems, updatedItems );

@@ -44,7 +44,7 @@ var processNext = function() {
 
 		console.error( '[' + moment().format('YYYY-MM-DD HH:mm:ss') + '] ' + err.stack );
 
-		mail.sendMail( next.config, next.url, appConfig.adminEmail, [], [], '<pre>' + err.stack + '</pre>' );
+		mail.sendMail( next.config, next.url, appConfig.adminEmail, [], [], [], '<pre>' + err.stack + '</pre>' );
 
 	} finally {
 

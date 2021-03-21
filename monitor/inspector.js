@@ -119,6 +119,7 @@ module.exports = {
 		// check items in database
 		var newItems		= [];
 		var updatedItems	= [];
+		var referenceItems  = [];
 
 		try {
 
@@ -135,6 +136,7 @@ module.exports = {
 					newItems.push( item );
 
 				} else if ( JSON.stringify( item ) !== JSON.stringify( found ) ) {
+					referenceItems.push( Object.assign({}, found ) );
 
 					for ( var j in item )
 						found[ j ] = item[ j ];
@@ -157,6 +159,6 @@ module.exports = {
 			throw err;
 		}
 
-		mail.sendMail( config, url, email, tag, newItems, updatedItems );
+		mail.sendMail( config, url, email, tag, newItems, updatedItems, referenceItems );
 	}
 };
