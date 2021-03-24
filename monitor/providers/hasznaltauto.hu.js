@@ -36,8 +36,11 @@ module.exports = {
 		image: {
 			selector:	'div.talalatisor-kep img',
 			value:		function ( elem, $ ) {
-
-				return elem.attr('data-lazyurl').split('t.').join('.')
+				var imgSrc = elem.attr('src')
+				if (imgSrc.includes('t.')) {
+					return imgSrc.split('t.').join('.')
+				}
+				return imgSrc
 			}
 		},
 		price: {
